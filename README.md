@@ -2,7 +2,7 @@
 
 [[**Open the notebook in Colab**]](https://colab.research.google.com/github/hhoppe/advent_of_code_2020/blob/main/advent_of_code_2020.ipynb)
 
-Jupyter [notebook](https://github.com/hhoppe/advent_of_code_2020/blob/main/advent_of_code_2020.ipynb) by [Hugues Hoppe](https://hhoppe.com/); December 2020.
+IPython/Jupyter [notebook](https://github.com/hhoppe/advent_of_code_2020/blob/main/advent_of_code_2020.ipynb) by [Hugues Hoppe](http://hhoppe.com/); December 2020.
 
 I participated in the 25-day [Advent of Code](https://adventofcode.com/) for the first time this year, thanks to encouragement from colleagues, especially [Sascha Häberling](https://github.com/shaeberling).  It was great fun and provided a nice opportunity to learn more advanced Python.
 
@@ -27,8 +27,11 @@ This notebook is organized such that each day is self-contained and can be run o
   The puzzle input string is automatically read into the attribute `puzzle.input`.
   This input string is unique to each Advent participant.
   By default, the notebook uses [my input data](https://github.com/hhoppe/advent_of_code_2020/tree/main/data) stored on GitHub,
-  but the variable `INPUT_DATA_PATH_OR_URL_FORMAT` can refer to any directory or URL.
-  Similarly, the (per-user) puzzle answers are read from my JSON [file](https://github.com/hhoppe/advent_of_code_2020/blob/main/data/answers.json) specified in `ANSWERS_PATH_OR_URL`.
+  but the variable `INPUT_PATH_OR_URL_FORMAT` can refer to any URL or
+  local file.
+  Simlarly, the reference answer to each puzzle part is read using `ANSWER_PATH_OR_URL_FORMAT`.
+
+  Alternatively, we read each puzzle input and answers directly from adventofcode.com using a session cookie and the `advent-of-code-data` PyPI package.
 
   For each of the two puzzle parts, a function (e.g. `process1`) takes an input string and returns a string or integer answer.
   Using calls like the following, we time the execution of each function and verify the answers:
