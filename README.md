@@ -1,3 +1,4 @@
+<a name="top"></a>
 # Advent of code 2020
 
 [[**Open the notebook in Colab**]](https://colab.research.google.com/github/hhoppe/advent_of_code_2020/blob/main/advent_of_code_2020.ipynb)
@@ -49,4 +50,12 @@ Some **conclusions**:
 - Initially I stored puzzle inputs within the notebook itself, but this introduces clutter and runs inefficiently.
 - The cloud-based CPU kernel/runtime provided by Colab works nicely.
 - With the [`numba`](https://numba.pydata.org/) library (for days [11](#day11), [15](#day15), and [23](#day23)), all of this year's puzzles can be solved in 1 second or less.
-- Remarkably, the total execution time across all 25 puzzles is under 4 s.
+- Remarkably, the total execution time across all 25 puzzles is about 4 s.
+
+Here are some visualization results:
+
+<a href="#day11">day11</a><img src="https://github.com/hhoppe/advent_of_code_2020/raw/main/results/day11a.gif" height="150">
+<img src="https://github.com/hhoppe/advent_of_code_2020/raw/main/results/day11b.gif" height="150">
+<a href="#day20">day20</a><img src="https://github.com/hhoppe/advent_of_code_2020/raw/main/results/day20a.png" height="150">
+<img src="https://github.com/hhoppe/advent_of_code_2020/raw/main/results/day20b.png" height="150">
+<a href="#day24">day24</a><img src="https://github.com/hhoppe/advent_of_code_2020/raw/main/results/day24.gif" height="150">
