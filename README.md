@@ -58,4 +58,5 @@ Here are some visualization results:
 <img src="https://github.com/hhoppe/advent_of_code_2020/raw/main/results/day11b.gif" height="150">
 <a href="#day20">day20</a><img src="https://github.com/hhoppe/advent_of_code_2020/raw/main/results/day20a.png" height="150">
 <img src="https://github.com/hhoppe/advent_of_code_2020/raw/main/results/day20b.png" height="150">
+<br/>
 <a href="#day24">day24</a><img src="https://github.com/hhoppe/advent_of_code_2020/raw/main/results/day24.gif" height="150">
