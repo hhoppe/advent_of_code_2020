@@ -52,16 +52,13 @@
 # %%
 import bisect
 import collections
-import dataclasses
 import functools
 import itertools
 import math
 import operator
-import pprint
 import re
 import textwrap
-from typing import Any, Callable, Dict, List
-from typing import Optional, Set, Tuple, Union
+from typing import Optional, Tuple
 
 import advent_of_code_hhoppe  # https://github.com/hhoppe/advent-of-code-hhoppe/blob/main/advent_of_code_hhoppe/__init__.py
 import hhoppe_tools as hh  # https://github.com/hhoppe/hhoppe-tools/blob/main/hhoppe_tools/__init__.py
@@ -83,7 +80,8 @@ YEAR = 2020
 PROFILE = 'google.Hugues_Hoppe.965276'
 # PROFILE = 'github.hhoppe.1452460'
 TAR_URL = f'https://github.com/hhoppe/advent_of_code_{YEAR}/raw/main/data/{PROFILE}.tar.gz'
-hh.run(f"if [ ! -d data/{PROFILE} ]; then (mkdir -p data && cd data && wget -q {TAR_URL} && tar xzf {PROFILE}.tar.gz); fi")
+hh.run(f"if [ ! -d data/{PROFILE} ]; then (mkdir -p data && cd data &&"
+       f" wget -q {TAR_URL} && tar xzf {PROFILE}.tar.gz); fi")
 INPUT_URL = f'data/{PROFILE}/{{year}}_{{day:02d}}_input.txt'
 ANSWER_URL = f'data/{PROFILE}/{{year}}_{{day:02d}}{{part_letter}}_answer.txt'
 
@@ -236,7 +234,7 @@ def process1(s, part2=False):
     if part2:
       num_valid += (password[vmin - 1] == ch) ^ (password[vmax - 1] == ch)
     else:
-      num_valid += vmin <= sum([c == ch for c in password]) <= vmax
+      num_valid += vmin <= sum(c == ch for c in password) <= vmax
   return num_valid
 
 
@@ -254,7 +252,7 @@ puzzle.verify(2, process2)  # ~1 ms.
 # %% [markdown]
 # Given a 2D grid containing sparse "trees", determine the number of trees encountered when moving from the top-left to the bottom row with a slope `(dy, dx)` and using wraparound addressing on the horizontal axis.
 #
-# - Part 1: Count the trees for the slope `(dy, dx) = (1, 3)` 
+# - Part 1: Count the trees for the slope `(dy, dx) = (1, 3)`
 #
 # - Part 2: Compute the product of the tree counts for slopes `(1, 1)`, `(1, 3)`, `(1, 5)`, `(1, 7)`, and `(2, 1)`.
 
@@ -279,7 +277,7 @@ s1 = """
 
 # %%
 def process1(s, part2=False):  # Slower.
-  dyxs=((1, 1), (1, 3), (1, 5), (1, 7), (2, 1)) if part2 else ((1, 3),)
+  dyxs = ((1, 1), (1, 3), (1, 5), (1, 7), (2, 1)) if part2 else ((1, 3),)
   grid = np.array(list(map(list, s.strip('\n').splitlines())))
 
   def get_count(dy, dx):
@@ -303,7 +301,7 @@ puzzle.verify(2, process2)  # ~3 ms.
 
 # %%
 def process1(s, part2=False):  # Faster.
-  dyxs=((1, 1), (1, 3), (1, 5), (1, 7), (2, 1)) if part2 else ((1, 3),)
+  dyxs = ((1, 1), (1, 3), (1, 5), (1, 7), (2, 1)) if part2 else ((1, 3),)
   grid = grid_from_string(s)
 
   def get_count(dy, dx):
@@ -407,10 +405,12 @@ def process1(s, part2=False):
     required_fields = set('byr iyr eyr hgt hcl ecl pid'.split())
     return all(field in fields for field in required_fields)
 
+  def year(field):
+    return int(re.fullmatch(r'(\d{4})', fields[field]).group())
+
   def part2_valid(fields):
     try:
       value, unit = re.fullmatch(r'(\d+)(cm|in)', fields['hgt']).groups()
-      year = lambda field: int(re.fullmatch(r'(\d{4})', fields[field]).group())
       return bool(
           1920 <= year('byr') <= 2002 and
           2010 <= year('iyr') <= 2020 and
@@ -703,8 +703,8 @@ puzzle.verify(1, process1)  # ~3 ms.  (~240 ms without lru_cache)
 def process1(s, query='shiny gold'):  # Fast too.
   contents = get_bag_contents(s)  # computational bottleneck
   parents = collections.defaultdict(list)
-  for bag in contents:
-    for child in contents[bag]:
+  for bag, children in contents.items():
+    for child in children:
       parents[child].append(bag)
 
   valid = set()
@@ -874,8 +874,8 @@ def process1(s, last_n=25, part2=False):
 
   def find_subsequence_summing_to(total):
     accum = list(itertools.accumulate(l, operator.add))  # accum[i] = sum(l[:i])
-    for i in range(len(accum)):
-      end_value = accum[i] + total
+    for i, value in enumerate(accum):
+      end_value = value + total
       j = bisect.bisect_left(accum, end_value)
       if j != len(accum) and accum[j] == end_value:
         return l[i + 1:j + 1]
@@ -1032,7 +1032,7 @@ puzzle.verify(2, process2)  # ~0 ms.
 # Given a *sparse* 2D grid of nodes, run successive generations of a cellular automaton until convergence.
 #
 # - Part 1: Each node's neighbors are the immediately adjacent nodes (up to 8, with Manhattan distance 1).
-#   
+#
 #   For each generation:
 #   - a free node becomes occupied if it has zero occupied neighbors, and
 #   - an occupied node becomes free if it has 4 or more occupied neighbors.
@@ -1156,8 +1156,7 @@ def process1(s, part2=False, return_video=False):
     # We view only the even-numbered frames to avoid flashing on/off.
     images = [images[0]] * 10 + images[::2] + [images[-1]] * 10
     return images
-  else:
-    return np.count_nonzero(grid == OCCUPIED)
+  return np.count_nonzero(grid == OCCUPIED)
 
 
 check_eq(process1(s1), 37)  # ~2000 ms for numba compilation.
@@ -1628,7 +1627,7 @@ def process1(s, part2=False):
 
   def value_ok_for_some_rule(value, rules):
     return any(range[0] <= value <= range[1]
-              for ranges in rules.values() for range in ranges)
+               for ranges in rules.values() for range in ranges)
 
   read_rules, my_ticket, read_tickets = read_rules_and_tickets(s)
   rules = dict(read_rules())
@@ -1706,9 +1705,6 @@ s1 = """
 # %%
 def process1(s, num_cycles=6, dim=3):  # Slower.
   lines = s.strip('\n').splitlines()
-  table = np.array(lines[0] == '#')
-  # print(len(table))
-
   indices = {
       (0,) * (dim - 2) + (y, x)
       for y, line in enumerate(lines) for x, ch in enumerate(line)
@@ -2014,7 +2010,7 @@ def process1(s, part2=False):  # Faster.
         symbols, text = symbols[1:], text[1:]
         continue
       return any(valid_expansion(expansion + symbols[1:], text)
-                for expansion in expansions)
+                 for expansion in expansions)
 
   return sum(valid_expansion((0,), text) for text in section2.splitlines())
 
@@ -2252,7 +2248,8 @@ def process1(s, part2=False, visualize=False):
       pattern_view = rotate(pattern_uint8, rotation)
       pattern_indices = pattern_view.nonzero()
       corr = scipy.signal.correlate2d(grid_uint8, pattern_view, mode='valid')
-      locations = np.moveaxis(np.nonzero(corr == pattern_view.sum()), 0, -1)
+      locations = np.moveaxis(np.array(np.nonzero(corr == pattern_view.sum())),
+                              0, -1)
       for y, x in locations:
         grid[y:, x:][pattern_indices] = 'O'
 
@@ -2318,9 +2315,11 @@ def process1(s, part2=False):
       else:
         possibles_for_allergen[allergen] &= ingredients
 
+  def has_single_ingredient(item):
+    return len(item[1]) == 1
+
   allergen_ingredient = {}
   while possibles_for_allergen:
-    has_single_ingredient = lambda item: len(item[1]) == 1
     allergen, ingredients = next(
         filter(has_single_ingredient, possibles_for_allergen.items()))
     ingredient = ingredients.pop()
@@ -2567,18 +2566,15 @@ def process1(s, max_num=0, num_moves=100):
       next_cup[destination] = extracted1
       current = next_cup[current]
 
-    return current
-
-  current = func(l, max_num, num_moves, next_cup)
+  func(l, max_num, num_moves, next_cup)
   if max_num:
     cup1 = next_cup[1]
     cup2 = next_cup[cup1]
     return int(cup1) * int(cup2)
-  else:
-    l = [next_cup[1]]
-    while next_cup[l[-1]] != 1:
-      l.append(next_cup[l[-1]])
-    return ''.join(map(str, l))
+  l = [next_cup[1]]
+  while next_cup[l[-1]] != 1:
+    l.append(next_cup[l[-1]])
+  return ''.join(map(str, l))
 
 
 check_eq(process1(s1, num_moves=10), '92658374')
