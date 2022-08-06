@@ -50,6 +50,8 @@
 # !pip install -q advent-of-code-hhoppe hhoppe-tools mediapy numba
 
 # %%
+from __future__ import annotations
+
 import bisect
 import collections
 import functools
@@ -58,7 +60,6 @@ import math
 import operator
 import re
 import textwrap
-from typing import Optional, Tuple
 
 import advent_of_code_hhoppe  # https://github.com/hhoppe/advent-of-code-hhoppe/blob/main/advent_of_code_hhoppe/__init__.py
 import hhoppe_tools as hh  # https://github.com/hhoppe/hhoppe-tools/blob/main/hhoppe_tools/__init__.py
@@ -1304,7 +1305,7 @@ puzzle.verify(1, process1)  # ~0 ms.
 # Part 2
 
 # %%
-def extended_gcd(a: int, b: int) -> Tuple[int, int, int]:
+def extended_gcd(a: int, b: int) -> tuple[int, int, int]:
   """Finds the greatest common divisor using the extended Euclidean algorithm.
 
   Returns:
@@ -2742,7 +2743,7 @@ def process1(s, base=7, mod=20201227):  # Fast.
       exponent //= 2
     return x
 
-  def log_mod(base: int, value: int, mod: int) -> Optional[int]:
+  def log_mod(base: int, value: int, mod: int) -> int | None:
     """Returns exponent for 'base**exponent % mod == value'."""
     # Using https://en.wikipedia.org/wiki/Baby-step_giant-step
     m = int(math.ceil(math.sqrt(mod)))
