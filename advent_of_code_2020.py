@@ -92,8 +92,8 @@ if 0:
   # See https://github.com/wimglenn/advent-of-code-data.
   hh.run('rm -f ~/.config/aocd/token*')
   # Fill-in the session cookie in the following:
-  hh.run(f"if [ '{PROFILE}' == 'google.Hugues_Hoppe.965276' ]; then mkdir -p ~/.config/aocd && echo 53616... >~/.config/aocd/token; fi")
-  hh.run(f"if [ '{PROFILE}' == 'github.hhoppe.1452460' ]; then mkdir -p ~/.config/aocd; echo 53616... >~/.config/aocd/token; fi")
+  hh.run(f"if [ '{PROFILE}' = 'google.Hugues_Hoppe.965276' ]; then mkdir -p ~/.config/aocd && echo 53616... >~/.config/aocd/token; fi")
+  hh.run(f"if [ '{PROFILE}' = 'github.hhoppe.1452460' ]; then mkdir -p ~/.config/aocd; echo 53616... >~/.config/aocd/token; fi")
   hh.run('pip install -q advent-of-code-data')
   import aocd
 
