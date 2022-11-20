@@ -228,9 +228,9 @@ s1 = """
 def process1(s, part2=False):
   lines = s.strip('\n').splitlines()
   num_valid = 0
-  pattern = re.compile(r'(\d+)-(\d+) (\w): (\w+)')
+  regex = re.compile(r'(\d+)-(\d+) (\w): (\w+)')
   for line in lines:
-    vmin, vmax, ch, password = pattern.fullmatch(line).groups()
+    vmin, vmax, ch, password = regex.fullmatch(line).groups()
     vmin, vmax = int(vmin), int(vmax)
     if part2:
       num_valid += (password[vmin - 1] == ch) ^ (password[vmax - 1] == ch)
@@ -675,11 +675,11 @@ dark violet bags contain no other bags.
 # %%
 def get_bag_contents(s):
   contents = {}
-  pattern = re.compile(r'(\d+) (.*?) bags?[,.]')
+  regex = re.compile(r'(\d+) (.*?) bags?[,.]')
   for line in s.strip('\n').splitlines():
     outer, inners = line.split(' bags contain ')
     contents[outer] = {}
-    for match in pattern.finditer(inners):
+    for match in regex.finditer(inners):
       n, inner = match.groups()
       contents[outer][inner] = int(n)
   return contents
@@ -2637,11 +2637,11 @@ def process1(s, part2=False, num_days=100, visualize=False):
   offsets = dict(e=(0, 1), w=(0, -1), sw=(1, 0), se=(1, 1),
                  nw=(-1, -1), ne=(-1, 0))
   tuple_offsets = tuple(offsets.values())  # slightly faster
-  pattern = re.compile('|'.join(offsets))
+  regex = re.compile('|'.join(offsets))
   indices = set()
   for line in s.strip('\n').splitlines():
     y, x = 0, 0
-    for s2 in pattern.findall(line):
+    for s2 in regex.findall(line):
       offset = offsets[s2]
       y, x = y + offset[0], x + offset[1]
     indices ^= {(y, x)}
