@@ -82,8 +82,9 @@ YEAR = 2020
 PROFILE = 'google.Hugues_Hoppe.965276'
 # PROFILE = 'github.hhoppe.1452460'
 TAR_URL = f'https://github.com/hhoppe/advent_of_code_{YEAR}/raw/main/data/{PROFILE}.tar.gz'
-hh.run(f"if [ ! -d data/{PROFILE} ]; then (mkdir -p data && cd data &&"
-       f" wget -q {TAR_URL} && tar xzf {PROFILE}.tar.gz); fi")
+if 1:
+  hh.run(f"if [ ! -d data/{PROFILE} ]; then (mkdir -p data && cd data &&"
+         f" wget -q {TAR_URL} && tar xzf {PROFILE}.tar.gz); fi")
 INPUT_URL = f'data/{PROFILE}/{{year}}_{{day:02d}}_input.txt'
 ANSWER_URL = f'data/{PROFILE}/{{year}}_{{day:02d}}{{part_letter}}_answer.txt'
 
@@ -176,7 +177,7 @@ s1 = """
 
 
 # %%
-def day1(s, total=2020):
+def day1(s, *, total=2020):
   entries = set(map(int, s.split()))
   for a in entries:
     b = total - a
@@ -190,7 +191,7 @@ puzzle.verify(1, day1)  # ~0 ms.
 
 
 # %%
-def day1_part2(s, total=2020):
+def day1_part2(s, *, total=2020):
   entries = set(map(int, s.split()))
   for a in entries:
     for b in entries:
@@ -226,7 +227,7 @@ s1 = """
 
 
 # %%
-def day2(s, part2=False):
+def day2(s, *, part2=False):
   lines = s.strip('\n').splitlines()
   num_valid = 0
   for line in lines:
@@ -277,7 +278,7 @@ s1 = """
 
 
 # %%
-def day3a(s, part2=False):  # Slower.
+def day3a(s, *, part2=False):  # Slower.
   dyxs = ((1, 1), (1, 3), (1, 5), (1, 7), (2, 1)) if part2 else ((1, 3),)
   grid = np.array(list(map(list, s.strip('\n').splitlines())))
 
@@ -301,7 +302,7 @@ puzzle.verify(2, day3_part2a)  # ~3 ms.
 
 
 # %%
-def day3(s, part2=False):  # Faster.
+def day3(s, *, part2=False):  # Faster.
   dyxs = ((1, 1), (1, 3), (1, 5), (1, 7), (2, 1)) if part2 else ((1, 3),)
   grid = grid_from_string(s)
 
@@ -399,7 +400,7 @@ iyr:2010 hgt:158cm hcl:#b6652a ecl:blu byr:1944 eyr:2021 pid:093154719
 # cid (Country ID) - ignored, missing or not.
 
 # %%
-def day4(s, part2=False):
+def day4(s, *, part2=False):
   passports = s.strip('\n').split('\n\n')
 
   def part1_valid(fields):
@@ -682,7 +683,7 @@ def day7_bag_contents(s):
 
 
 # %%
-def day7_part1a(s, query='shiny gold'):  # Compact and fast with caching.
+def day7_part1a(s, *, query='shiny gold'):  # Compact and fast with caching.
   """Returns number of bag colors that can eventually contain >=1 query bag."""
   contents = day7_bag_contents(s)
 
@@ -697,7 +698,7 @@ puzzle.verify(1, day7_part1a)  # ~3 ms.  (~240 ms without lru_cache)
 
 
 # %%
-def day7_part1(s, query='shiny gold'):  # Fast too.
+def day7_part1(s, *, query='shiny gold'):  # Fast too.
   contents = day7_bag_contents(s)  # computational bottleneck
   parents = collections.defaultdict(list)
   for bag, children in contents.items():
@@ -723,7 +724,7 @@ puzzle.verify(1, day7_part1)  # ~3 ms.
 # Part 2
 
 # %%
-def day7_part2(s, query='shiny gold'):
+def day7_part2(s, *, query='shiny gold'):
   """Returns total number of individual bags required inside a query bag."""
   contents = day7_bag_contents(s)  # computational bottleneck
 
@@ -766,7 +767,7 @@ acc +6
 
 
 # %%
-def day8(s, part2=False):
+def day8(s, *, part2=False):
 
   def run_program(ops):
     pc = 0
@@ -849,7 +850,7 @@ s1 = """
 
 
 # %%
-def day9(s, last_n=25, part2=False):
+def day9(s, *, last_n=25, part2=False):
   l = list(map(int, s.split()))
 
   def has_pair(l, total):
@@ -1062,7 +1063,7 @@ L.LLLLL.LL
 # Relatively fast non-numba solution, which maintains neighbor counts.
 # It becomes faster with numba enabled, but not as fast as the next solution.
 
-def day11a(s, part2=False):
+def day11a(s, *, part2=False):
   # -1 is EMPTY, 0..8 is FREE+neighbor_count, 10..18 is OCCUPIED+neighbor_count
   int_from_ch = {'.': -1, 'L': 0, '#': 10}
   grid = grid_from_string(s, int_from_ch)
@@ -1111,7 +1112,7 @@ if 'numba' not in globals():  # Best non-numba solutions.
 
 # %%
 # More naive solution, but faster when using numba.
-def day11(s, part2=False, return_video=False):
+def day11(s, *, part2=False, return_video=False):
   int_from_ch = {'.': 0, 'L': 1, '#': 2}
   grid = grid_from_string(s, int_from_ch)
   neighbors = tuple(set(itertools.product((-1, 0, 1), repeat=2)) - {(0, 0)})
@@ -1393,7 +1394,7 @@ mem[26] = 1
 
 
 # %%
-def day14(s, part2=False):
+def day14(s, *, part2=False):
   mem = {}
   extract_0 = str.maketrans('01X', '100')
   extract_1 = str.maketrans('01X', '010')
@@ -1451,7 +1452,7 @@ s1 = '0,3,6'
 
 
 # %%
-def day15a(s, num_turns=2020):  # Slow, using dict().
+def day15a(s, *, num_turns=2020):  # Slow, using dict().
   initial_sequence = tuple(map(int, s.split(',')))
 
   def generate_sequence(initial_sequence):
@@ -1484,7 +1485,7 @@ day15_part2a = functools.partial(day15a, num_turns=30_000_000)
 # puzzle.verify(2, day15_part2a)  # Slow; ~15 s.
 
 # %%
-def day15b(s, num_turns=2020):  # Faster, using List.
+def day15b(s, *, num_turns=2020):  # Faster, using List.
 
   def func(initial_sequence, num_turns):
     last_turn = [-1] * num_turns
@@ -1514,7 +1515,7 @@ if 'numba' not in globals():
 
 
 # %%
-def day15(s, num_turns=2020):  # Faster, using np.array and numba.
+def day15(s, *, num_turns=2020):  # Faster, using np.array and numba.
 
   @numba_njit(cache=True)
   def func(initial_sequence, num_turns):
@@ -1598,7 +1599,7 @@ nearby tickets:
 
 
 # %%
-def day16(s, part2=False):
+def day16(s, *, part2=False):
 
   def read_rules_and_tickets(s):
     s_rules, s_my_ticket, s_nearby = s.strip('\n').split('\n\n')
@@ -1691,7 +1692,7 @@ s1 = """
 # Both of the solutions below work in arbitrary dimension!
 
 # %%
-def day17a(s, num_cycles=6, dim=3):  # Slower.
+def day17a(s, *, num_cycles=6, dim=3):  # Slower.
   lines = s.strip('\n').splitlines()
   indices = {
       (0,) * (dim - 2) + (y, x)
@@ -1721,7 +1722,7 @@ puzzle.verify(1, day17a)  # ~150 ms.
 
 
 # %%
-def day17(s, num_cycles=6, dim=3):  # Faster.
+def day17(s, *, num_cycles=6, dim=3):  # Faster.
   lines = s.strip('\n').splitlines()
   indices = {
       (0,) * (dim - 2) + (y, x)
@@ -1764,7 +1765,7 @@ puzzle.verify(2, day17_part2)  # ~200 ms.
 # %%
 def day17_show_num_active_in_each_generation_for_2d_3d_4d():
   for dim in range(2, 5):
-    print(dim, [day17(puzzle.input, n, dim) for n in range(6)])
+    print(dim, [day17(puzzle.input, num_cycles=num_cycles, dim=dim) for num_cycles in range(6)])
 
 day17_show_num_active_in_each_generation_for_2d_3d_4d()
 
@@ -1784,7 +1785,7 @@ puzzle = advent.puzzle(day=18)
 
 
 # %%
-def day18a(strings, part2=False):  # Slower, more readable.
+def day18a(strings, *, part2=False):  # Slower, more readable.
 
   def evaluate_line(s):
 
@@ -1826,7 +1827,7 @@ puzzle.verify(2, day18_part2a)  # ~55 ms.
 
 
 # %%
-def day18(strings, part2=False):  # Compact and faster.
+def day18(strings, *, part2=False):  # Compact and faster.
 
   def evaluate_line(s: str) -> int:
 
@@ -1946,7 +1947,7 @@ aabbbbbaabbbaaaaaabbbbbababaaaaabbaaabba
 
 
 # %%
-def day19a(s, part2=False):  # Compact.
+def day19a(s, *, part2=False):  # Compact.
   section1, section2 = s.strip('\n').split('\n\n')
   rules = dict(line.split(': ') for line in section1.splitlines())
   if part2:
@@ -1973,7 +1974,7 @@ puzzle.verify(2, day19_part2a)  # ~500 ms.
 
 
 # %%
-def day19(s, part2=False):  # Faster.
+def day19(s, *, part2=False):  # Faster.
   section1, section2 = s.strip('\n').split('\n\n')
   rules = {
       int(symbol): (rhs[1] if rhs[0] == '"' else
@@ -2137,7 +2138,7 @@ Tile 3079:
 
 
 # %%
-def day20(s, part2=False, visualize=False):
+def day20(s, *, part2=False, visualize=False):
   tiles = {int(t[5:9]): grid_from_string(t[11:])
            for t in s.strip('\n').split('\n\n')}
   n = int(len(tiles)**0.5)  # math.isqrt() in version 3.8
@@ -2286,7 +2287,7 @@ sqjhc mxmxvkd sbzzf (contains fish)
 
 
 # %%
-def day21(s, part2=False):
+def day21(s, *, part2=False):
 
   def foods():
     for line in s.strip('\n').splitlines():
@@ -2469,7 +2470,7 @@ s1 = '389125467'
 
 
 # %%
-def day23a(s, num_moves=100):  # Using list.
+def day23a(s, *, num_moves=100):  # Using list.
   l = list(map(int, s.strip()))
 
   for _ in range(num_moves):
@@ -2490,7 +2491,7 @@ check_eq(day23a(s1), '67384529')
 
 
 # %%
-def day23b(s, num_moves=100):  # Using deque.
+def day23b(s, *, num_moves=100):  # Using deque.
   d = collections.deque(map(int, s.strip()))
   n = len(d)
 
@@ -2517,7 +2518,7 @@ check_eq(day23b(s1), '67384529')
 
 # %%
 # Code keeping track of next cup label for each cup label:
-def day23(s, max_num=0, num_moves=100):
+def day23(s, *, max_num=0, num_moves=100):
   dtype = np.int32 if 'numba' in globals() else np.int64
   l = np.array(list(map(int, s.strip())), dtype)
   next_cup = np.empty(1 + max(len(l), max_num), dtype=l.dtype)
@@ -2612,7 +2613,7 @@ wseweeenwnesenwwwswnew
 
 
 # %%
-def day24(s, part2=False, num_days=100, visualize=False):
+def day24(s, *, part2=False, num_days=100, visualize=False):
   if not part2:
     num_days = 0
   offsets = dict(e=(0, 1), w=(0, -1), sw=(1, 0), se=(1, 1), nw=(-1, -1), ne=(-1, 0))
@@ -2676,7 +2677,7 @@ s1 = """
 
 
 # %%
-def day25a(s, base=7, mod=20201227):  # Slow.
+def day25a(s, *, base=7, mod=20201227):  # Slow.
   card_public_key, door_public_key = map(int, s.strip('\n').splitlines())
 
   # Slow trial-multiplication; https://en.wikipedia.org/wiki/Discrete_logarithm
@@ -2711,7 +2712,7 @@ puzzle.verify(1, day25a)  # ~1000 ms.
 
 
 # %%
-def day25(s, base=7, mod=20201227):  # Fast.
+def day25(s, *, base=7, mod=20201227):  # Fast.
 
   def pow_mod(base: int, exponent: int, mod: int) -> int:
     """Returns 'base**exponent % mod' using square-multiply algorithm."""
@@ -2792,6 +2793,9 @@ if 0:  # Lint.
 # %%
 hh.show_notebook_cell_top_times()
 
+# %% [markdown]
+# # End
+
 # %%
 # Goals:
 # (1) Find puzzle answers.
@@ -2799,9 +2803,6 @@ hh.show_notebook_cell_top_times()
 # (3) Speed up computation.
 # (4) Visualize intermediate results.
 # (5) Generalize to all puzzle inputs.
-
-# %% [markdown]
-# # End
 
 # %% [markdown]
 # <!-- For Emacs:
