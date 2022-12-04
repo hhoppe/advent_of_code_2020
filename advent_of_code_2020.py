@@ -296,9 +296,9 @@ def day3a(s, *, part2=False):  # Slower.
 check_eq(day3a(s1), 7)
 puzzle.verify(1, day3a)  # ~1 ms.
 
-day3_part2a = functools.partial(day3a, part2=True)
-check_eq(day3_part2a(s1), 336)
-puzzle.verify(2, day3_part2a)  # ~3 ms.
+day3a_part2 = functools.partial(day3a, part2=True)
+check_eq(day3a_part2(s1), 336)
+puzzle.verify(2, day3a_part2)  # ~3 ms.
 
 
 # %%
@@ -488,17 +488,17 @@ day5_visualize_transposed_seat_grid(puzzle.input)
 
 
 # %%
-def day5_part2a(s):  # Using regular expression search.
+def day5a_part2(s):  # Using regular expression search.
   seat_ids = [day5_seat_id(line) for line in s.split()]
   occupied = ''.join('01'[seat_id in seat_ids] for seat_id in range(128 * 8))
   seat_id, = [match.start() for match in re.finditer('(?<=1)0(?=1)', occupied)]
   return seat_id
 
-puzzle.verify(2, day5_part2a)  # ~11 ms.
+puzzle.verify(2, day5a_part2)  # ~11 ms.
 
 
 # %%
-def day5_part2b(s):  # Using string indexing.
+def day5b_part2(s):  # Using string indexing.
 
   def find_all(string, substring, overlapping=False):
     i = string.find(substring)
@@ -512,18 +512,18 @@ def day5_part2b(s):  # Using string indexing.
   seat_id = i + 1
   return seat_id
 
-puzzle.verify(2, day5_part2b)  # ~9 ms.
+puzzle.verify(2, day5b_part2)  # ~9 ms.
 
 
 # %%
-def day5_part2c(s):  # Fast, using numpy successive differences of sorted indices.
+def day5c_part2(s):  # Fast, using numpy successive differences of sorted indices.
   seat_ids = np.sort([day5_seat_id(line) for line in s.split()])
   diff = np.diff(seat_ids)
   i, = np.nonzero(diff == 2)[0]
   seat_id = seat_ids[i] + 1
   return seat_id
 
-puzzle.verify(2, day5_part2c)  # ~2 ms.
+puzzle.verify(2, day5c_part2)  # ~2 ms.
 
 
 # %%
@@ -580,7 +580,7 @@ b
 # Part 1
 
 # %%
-def day6_part1a(s):  # Long code.
+def day6a_part1(s):  # Long code.
   total = 0
   for group in s.strip('\n').split('\n\n'):
     union = set()
@@ -589,17 +589,17 @@ def day6_part1a(s):  # Long code.
     total += len(union)
   return total
 
-check_eq(day6_part1a(s1), 11)
-puzzle.verify(1, day6_part1a)  # ~3 ms.
+check_eq(day6a_part1(s1), 11)
+puzzle.verify(1, day6a_part1)  # ~3 ms.
 
 
 # %%
-def day6_part1b(s):  # Using reduction.
+def day6b_part1(s):  # Using reduction.
   return sum(len(functools.reduce(operator.or_, map(set, group.splitlines())))
              for group in s.strip('\n').split('\n\n'))
 
-check_eq(day6_part1b(s1), 11)
-puzzle.verify(1, day6_part1b)  # ~3 ms.
+check_eq(day6b_part1(s1), 11)
+puzzle.verify(1, day6b_part1)  # ~3 ms.
 
 
 # %%
@@ -615,12 +615,12 @@ puzzle.verify(1, day6_part1)  # ~1 ms.
 # Part 2
 
 # %%
-def day6_part2a(s):  # Using reduction.
+def day6a_part2(s):  # Using reduction.
   return sum(len(functools.reduce(operator.and_, map(set, group.splitlines())))
              for group in s.strip('\n').split('\n\n'))
 
-check_eq(day6_part2a(s1), 6)
-puzzle.verify(2, day6_part2a)  # ~3 ms.
+check_eq(day6a_part2(s1), 6)
+puzzle.verify(2, day6a_part2)  # ~3 ms.
 
 
 # %%
@@ -683,7 +683,7 @@ def day7_bag_contents(s):
 
 
 # %%
-def day7_part1a(s, *, query='shiny gold'):  # Compact and fast with caching.
+def day7a_part1(s, *, query='shiny gold'):  # Compact and fast with caching.
   """Returns number of bag colors that can eventually contain >=1 query bag."""
   contents = day7_bag_contents(s)
 
@@ -693,8 +693,8 @@ def day7_part1a(s, *, query='shiny gold'):  # Compact and fast with caching.
 
   return sum(valid(bag) for bag in contents)
 
-check_eq(day7_part1a(s1), 4)
-puzzle.verify(1, day7_part1a)  # ~3 ms.  (~240 ms without lru_cache)
+check_eq(day7a_part1(s1), 4)
+puzzle.verify(1, day7a_part1)  # ~3 ms.  (~240 ms without lru_cache)
 
 
 # %%
@@ -976,7 +976,7 @@ puzzle.verify(1, day10_part1)  # ~0 ms.  66 * 32.
 # length of the sequences of value 1, and derive a closed-form number for each
 # sequence.
 
-def day10_part2a(s):
+def day10a_part2(s):
   diff = np.diff([0] + sorted(map(int, s.split())))
   lengths_of_ones = map(len, re.findall('1+', ''.join(map(str, diff))))
 
@@ -986,14 +986,14 @@ def day10_part2a(s):
 
   return np.prod(list(map(f, lengths_of_ones)))
 
-check_eq(day10_part2a(s1), 8)
-check_eq(day10_part2a(s2), 19208)
-puzzle.verify(2, day10_part2a)  # ~0 ms.
+check_eq(day10a_part2(s1), 8)
+check_eq(day10a_part2(s2), 19208)
+puzzle.verify(2, day10a_part2)  # ~0 ms.
 
 
 # %%
 # More general solution based on dynamic programming with scatter.
-def day10_part2b(s):
+def day10b_part2(s):
   l = [0] + sorted(map(int, s.split()))
   npaths = [1] + [0] * (len(l) - 1)
   for i in range(len(l)):  # pylint: disable=consider-using-enumerate
@@ -1002,9 +1002,9 @@ def day10_part2b(s):
         npaths[j] += npaths[i]
   return npaths[-1]
 
-check_eq(day10_part2b(s1), 8)
-check_eq(day10_part2b(s2), 19208)
-puzzle.verify(2, day10_part2b)  # ~0 ms.
+check_eq(day10b_part2(s1), 8)
+check_eq(day10b_part2(s2), 19208)
+puzzle.verify(2, day10b_part2)  # ~0 ms.
 
 
 # %%
@@ -1102,12 +1102,12 @@ def day11a(s, *, part2=False):
 
 
 check_eq(day11a(s1), 37)
-day11_part1a = functools.partial(day11a, part2=True)
-check_eq(day11_part1a(s1), 26)
+day11a_part2 = functools.partial(day11a, part2=True)
+check_eq(day11a_part2(s1), 26)
 
 if 'numba' not in globals():  # Best non-numba solutions.
   puzzle.verify(1, day11a)  # ~2500 ms.
-  puzzle.verify(2, day11_part1a)  # ~5800 ms.
+  puzzle.verify(2, day11a_part2)  # ~5800 ms.
 
 
 # %%
@@ -1481,8 +1481,8 @@ check_eq(day15a('3,2,1'), 438)
 check_eq(day15a('3,1,2'), 1836)
 puzzle.verify(1, day15a)  # ~1 ms.
 
-day15_part2a = functools.partial(day15a, num_turns=30_000_000)
-# puzzle.verify(2, day15_part2a)  # Slow; ~15 s.
+day15a_part2 = functools.partial(day15a, num_turns=30_000_000)
+# puzzle.verify(2, day15a_part2)  # Slow; ~15 s.
 
 # %%
 def day15b(s, *, num_turns=2020):  # Faster, using List.
@@ -1509,9 +1509,9 @@ check_eq(day15b(s1), 436)
 puzzle.verify(1, day15b)  # ~1 ms.
 
 if 'numba' not in globals():
-  day15_part2b = functools.partial(day15b, num_turns=30_000_000)
-  # check_eq(day15_part2b(s1), 175594)  # Slow; ~9 s.
-  puzzle.verify(2, day15_part2b)  # Slow; ~10 s.
+  day15b_part2 = functools.partial(day15b, num_turns=30_000_000)
+  # check_eq(day15b_part2(s1), 175594)  # Slow; ~9 s.
+  puzzle.verify(2, day15b_part2)  # Slow; ~10 s.
 
 
 # %%
@@ -1822,8 +1822,8 @@ def day18a(strings, *, part2=False):  # Slower, more readable.
 
 puzzle.verify(1, day18a)  # ~50 ms.
 
-day18_part2a = functools.partial(day18a, part2=True)
-puzzle.verify(2, day18_part2a)  # ~55 ms.
+day18a_part2 = functools.partial(day18a, part2=True)
+puzzle.verify(2, day18a_part2)  # ~55 ms.
 
 
 # %%
@@ -1968,9 +1968,9 @@ def day19a(s, *, part2=False):  # Compact.
 check_eq(day19a(s1), 2)
 puzzle.verify(1, day19a)  # ~100 ms.
 
-day19_part2a = functools.partial(day19a, part2=True)
-check_eq(day19_part2a(s2), 12)
-puzzle.verify(2, day19_part2a)  # ~500 ms.
+day19a_part2 = functools.partial(day19a, part2=True)
+check_eq(day19a_part2(s2), 12)
+puzzle.verify(2, day19a_part2)  # ~500 ms.
 
 
 # %%
@@ -2381,7 +2381,7 @@ puzzle.verify(1, day22_part1)  # ~0 ms.
 # Part 2
 
 # %%
-def day22_part2a(s):  # Slower code using deque.
+def day22a_part2(s):  # Slower code using deque.
 
   def combat(hands):  # Returns (hands, winner)
     visited = set()
@@ -2406,8 +2406,8 @@ def day22_part2a(s):  # Slower code using deque.
   return sum((i + 1) * card for i, card in enumerate(reversed(hands[winner])))
 
 
-check_eq(day22_part2a(s1), 291)
-# puzzle.verify(2, day22_part2a)  # ~1750 ms.
+check_eq(day22a_part2(s1), 291)
+# puzzle.verify(2, day22a_part2)  # ~1750 ms.
 
 # %%
 def day22_part2(s):  # Faster code using tuples.
