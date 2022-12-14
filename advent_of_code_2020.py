@@ -47,7 +47,7 @@
 # !command -v ffmpeg >/dev/null || (apt-get -qq update && apt-get -qq -y install ffmpeg) >/dev/null
 
 # %%
-# !pip install -q advent-of-code-hhoppe hhoppe-tools mediapy numba
+# !pip install -q advent-of-code-hhoppe hhoppe-tools mediapy more-itertools numba
 
 # %%
 from __future__ import annotations
@@ -65,6 +65,7 @@ from typing import Any
 import advent_of_code_hhoppe  # https://github.com/hhoppe/advent-of-code-hhoppe/blob/main/advent_of_code_hhoppe/__init__.py
 import hhoppe_tools as hh  # https://github.com/hhoppe/hhoppe-tools/blob/main/hhoppe_tools/__init__.py
 import mediapy as media
+import more_itertools
 import numpy as np
 
 # %%
@@ -290,7 +291,7 @@ def day3a(s, *, part2=False):  # Slower.
       y, x = y + dy, (x + dx) % grid.shape[1]
     return count
 
-  return np.prod([get_count(dy, dx) for dy, dx in dyxs])
+  return math.prod(get_count(dy, dx) for dy, dx in dyxs)
 
 
 check_eq(day3a(s1), 7)
@@ -311,7 +312,7 @@ def day3(s, *, part2=False):  # Faster.
     x = (np.arange(len(y)) * dx) % grid.shape[1]
     return np.count_nonzero(grid[y, x] == '#')
 
-  return np.prod([get_count(dy, dx) for dy, dx in dyxs])
+  return math.prod(get_count(dy, dx) for dy, dx in dyxs)
 
 
 check_eq(day3(s1), 7)
@@ -427,7 +428,7 @@ def day4(s, *, part2=False):
 
   num_valid = 0
   for passport in passports:
-    fields: dict[str, str] = dict(hh.re_groups(r'^(\w\w\w):(\S+)$', s_field)  # type: ignore
+    fields: dict[str, str] = dict(hh.re_groups(r'^(\w\w\w):(\S+)$', s_field)  # type: ignore[misc]
                                   for s_field in passport.split())
     num_valid += part2_valid(fields) if part2 else part1_valid(fields)
 
@@ -481,7 +482,8 @@ def day5_visualize_transposed_seat_grid(s):
   grid = np.full((128, 8), 0)
   yx = np.array([divmod(day5_seat_id(line), 8) for line in s.split()])
   grid[tuple(yx.T)] = 1
-  print('\n'.join(''.join('.#'[e] for e in row) for row in grid.T))
+  if 0:
+    print('\n'.join(''.join('.#'[e] for e in row) for row in grid.T))
   media.show_image(grid.T == 1, border=True, width=600)
 
 day5_visualize_transposed_seat_grid(puzzle.input)
@@ -984,7 +986,7 @@ def day10a_part2(s):
     """Number of combinations from a sequence of n consecutive one-diffs."""
     return 0 if n < 0 else 1 if n < 2 else f(n - 1) + f(n - 2) + f(n - 3)
 
-  return np.prod(list(map(f, lengths_of_ones)))
+  return math.prod(map(f, lengths_of_ones))
 
 check_eq(day10a_part2(s1), 8)
 check_eq(day10a_part2(s2), 19208)
@@ -1341,12 +1343,13 @@ def extended_gcd(a: int, b: int) -> tuple[int, int, int]:
 def day13_part2(s):
   s = s.splitlines()[-1]
   buses = [int(e) for e in s.replace('x', '1').split(',')]
-  check_eq(np.lcm.reduce(buses), np.prod(buses))  # verify all coprime
+  check_eq(np.lcm.reduce(buses), math.prod(buses))  # verify all coprime
   bus_remainders = [(bus, -i % bus) for i, bus in enumerate(buses) if bus > 1]
 
   def merge_buses(bus1, bus2):
     (b1, r1), (b2, r2) = bus1, bus2
     # https://en.wikipedia.org/wiki/Chinese_remainder_theorem
+    # ?? instead use modular inverse
     _, x, y = extended_gcd(b1, b2)
     return b1 * b2, (r1 * y * b2 + r2 * x * b1) % (b1 * b2)
 
@@ -1608,7 +1611,7 @@ def day16(s, *, part2=False):
       for line in s_rules.splitlines():
         name, ranges = line.split(': ')
         ranges = ranges.split(' or ')
-        yield (name, [tuple(map(int, range.split('-'))) for range in ranges])
+        yield name, [tuple(map(int, range.split('-'))) for range in ranges]
 
     line, = s_my_ticket.splitlines()[1:]
     my_ticket = list(map(int, line.split(',')))
@@ -1657,7 +1660,7 @@ def day16(s, *, part2=False):
     grid[:, col] = 0
   values = [my_ticket[column_of_rule[rule]] for rule in rules if rule.startswith('departure')]
   check_eq(len(values), 6)
-  return np.prod(values)
+  return math.prod(values)
 
 
 check_eq(day16(s1), 71)
@@ -1747,7 +1750,7 @@ def day17(s, *, num_cycles=6, dim=3):  # Faster.
     # Adapted from collections.Counter() algorithm in
     # https://github.com/norvig/pytudes/blob/master/ipynb/Advent-2020.ipynb
     neighbor_counts = collections.Counter(
-        itertools.chain.from_iterable(neighbors(index) for index in indices))
+        more_itertools.flatten(neighbors(index) for index in indices))
     indices = {index for index, count in neighbor_counts.items()
                if count == 3 or (count == 2 and index in indices)}
 
@@ -1767,7 +1770,8 @@ def day17_show_num_active_in_each_generation_for_2d_3d_4d():
   for dim in range(2, 5):
     print(dim, [day17(puzzle.input, num_cycles=num_cycles, dim=dim) for num_cycles in range(6)])
 
-day17_show_num_active_in_each_generation_for_2d_3d_4d()
+if 0:
+  day17_show_num_active_in_each_generation_for_2d_3d_4d()
 
 # %% [markdown]
 # <a name="day18"></a>
@@ -2141,7 +2145,7 @@ Tile 3079:
 def day20(s, *, part2=False, visualize=False):
   tiles = {int(t[5:9]): grid_from_string(t[11:])
            for t in s.rstrip('\n').split('\n\n')}
-  n = int(len(tiles)**0.5)  # math.isqrt() in version 3.8
+  n = math.isqrt(len(tiles))
 
   if visualize:
     tiles_bool = [tile != '#' for tile in tiles.values()]
@@ -2172,7 +2176,7 @@ def day20(s, *, part2=False, visualize=False):
   corners = [index for index, tile in tiles.items() if is_corner(tile)]
   assert len(corners) == 4  # Exactly four tiles must be at the corners.
   if not part2:
-    return np.prod(corners)
+    return math.prod(corners)
 
   # Place a first corner in the grid upper-left and determine its rotation.
   index = corners[0]
@@ -2727,7 +2731,8 @@ def day25(s, *, base=7, mod=20201227):  # Fast.
   def log_mod(base: int, value: int, mod: int) -> int | None:
     """Returns exponent for 'base**exponent % mod == value'."""
     # Using https://en.wikipedia.org/wiki/Baby-step_giant-step
-    m = int(math.ceil(math.sqrt(mod)))
+    # m = int(math.ceil(math.sqrt(mod)))
+    m = math.isqrt(mod - 1) + 1
     table = {}
     e = 1
     for i in range(m):
