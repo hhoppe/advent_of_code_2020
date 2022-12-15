@@ -54,6 +54,7 @@ from __future__ import annotations
 
 import bisect
 import collections
+from collections.abc import Iterable
 import functools
 import itertools
 import math
@@ -126,7 +127,7 @@ _ORIGINAL_GLOBALS = list(globals())
 def grid_from_string(s, int_from_ch=None, dtype=int) -> np.ndarray:
   grid = np.array([list(line) for line in s.splitlines()])
   if int_from_ch:
-    lookup = np.zeros(256, dtype=dtype)
+    lookup = np.zeros(256, dtype)
     for ch, value in int_from_ch.items():
       lookup[ord(ch)] = value
     grid = lookup[grid.view(np.int32)]
@@ -134,7 +135,7 @@ def grid_from_string(s, int_from_ch=None, dtype=int) -> np.ndarray:
 
 
 # %%
-def grid_from_indices(indices, background=0, foreground=1, indices_min=None,
+def grid_from_indices(indices, *, background=0, foreground=1, indices_min=None,
                       indices_max=None, pad=0, dtype=None) -> np.ndarray:
   indices = np.asarray(indices)
   assert indices.ndim == 2 and np.issubdtype(indices.dtype, np.integer)
@@ -147,7 +148,7 @@ def grid_from_indices(indices, background=0, foreground=1, indices_min=None,
   a_pad = np.asarray(pad)
   shape = i_max - i_min + 2 * a_pad + 1
   offset = -i_min + a_pad
-  grid = np.full(shape, background, dtype=dtype)
+  grid = np.full(shape, background, dtype)
   indices += offset
   grid[tuple(np.moveaxis(indices, -1, 0))] = foreground
   return grid
@@ -1303,6 +1304,20 @@ puzzle.verify(1, day13_part1)  # ~0 ms.
 # Part 2
 
 # %%
+# Let each bus be represented by its period b_i and desired remainder r_i.
+
+# Given [(b_i, r_i)], where b_i are coprime, we seek x such that
+#  x % b_i = r_i  for all i,  where r_i = -i % b_i
+# We can work by reduction, merging pairs of buses.
+
+# Given a pair of buses (b1, r1) and (b2, r2),
+# we want to find a new equivalent bus (b1 * b2, r) such that
+#  0 <= r < b1 * b2
+#  r % b1 = r1
+#  r % b2 = r2
+# We can apply the Chinese remainder theorem using the extended GCD algorithm.
+
+# %%
 def extended_gcd(a: int, b: int) -> tuple[int, int, int]:
   """Finds the greatest common divisor using the extended Euclidean algorithm.
 
@@ -1325,36 +1340,64 @@ def extended_gcd(a: int, b: int) -> tuple[int, int, int]:
   return a, x, y
 
 
-# %%
-# Let each bus be represented by its period b_i and desired remainder r_i.
+check_eq(extended_gcd(29, 71), ((1, -22, 9)))
 
-# Given [(b_i, r_i)], where b_i are coprime, we seek x such that
-#  x % b_i = r_i  for all i,  where r_i = -i % b_i
-# We can work by reduction, merging pairs of buses.
-
-# Given a pair of buses (b1, r1) and (b2, r2),
-# we want to find a new equivalent bus (b1 * b2, r) such that
-#  0 <= r < b1 * b2
-#  r % b1 = r1
-#  r % b2 = r2
-# We can apply the Chinese remainder theorem using the extended GCD algorithm.
 
 # %%
-def day13_part2(s):
+def day13a_part2(s):  # Using pairwise reduction with extended_gcd.
   s = s.splitlines()[-1]
   buses = [int(e) for e in s.replace('x', '1').split(',')]
   check_eq(np.lcm.reduce(buses), math.prod(buses))  # verify all coprime
-  bus_remainders = [(bus, -i % bus) for i, bus in enumerate(buses) if bus > 1]
+  bus_remainders = [(bus, -i % bus) for i, bus in enumerate(buses)]  # Optionally "if bus > 1".
 
   def merge_buses(bus1, bus2):
     (b1, r1), (b2, r2) = bus1, bus2
     # https://en.wikipedia.org/wiki/Chinese_remainder_theorem
-    # ?? instead use modular inverse
     _, x, y = extended_gcd(b1, b2)
     return b1 * b2, (r1 * y * b2 + r2 * x * b1) % (b1 * b2)
 
   _, r = functools.reduce(merge_buses, bus_remainders)
   return r
+
+
+check_eq(day13a_part2(s1.splitlines()[1]), 1068781)
+check_eq(day13a_part2('17,x,13,19'), 3417)
+check_eq(day13a_part2('67,7,59,61'), 754018)
+check_eq(day13a_part2('67,x,7,59,61'), 779210)
+check_eq(day13a_part2('67,7,x,59,61'), 1261476)
+check_eq(day13a_part2('1789,37,47,1889'), 1202161486)
+puzzle.verify(2, day13a_part2)  # ~0 ms.
+
+
+# %%
+def day13_part2(s):  # Using built-in modular inverses and general Chinese Remainder method.
+  s = s.splitlines()[-1]
+  buses = [int(e) for e in s.replace('x', '1').split(',')]
+  check_eq(np.lcm.reduce(buses), math.prod(buses))  # verify all coprime
+  remainders, moduli = zip(*[(-i % bus, bus) for i, bus in enumerate(buses)])  # Or "if bus > 1".
+
+  def solve_mod_congruences(values: Iterable[int], moduli: Iterable[int]) -> int:
+    """Returns `x` satisfying `values[i] == x % moduli[i]`.
+
+    The Chinese Remainder Theorem shows the system has a unique solution if `moduli` are coprime.
+    See https://en.wikipedia.org/wiki/Modular_multiplicative_inverse#Applications .
+
+    Args:
+      values: Desired remainders with respect to a corresponding sequence of moduli.
+      moduli: Positive integers, which must be coprime.
+
+    >>> solve_mod_congruences([3, 6, 6], [5, 7, 11])
+    39
+    """
+    values, moduli = tuple(values), tuple(moduli)
+    assert len(values) == len(moduli) > 0
+    mod_prod = math.prod(moduli)
+    other_mods = [mod_prod // mod for mod in moduli]
+    inverses = [pow(other_mod, -1, mod=mod) for other_mod, mod in zip(other_mods, moduli)]
+    return sum(inverse * other_mod * value
+               for inverse, other_mod, value in zip(inverses, other_mods, values)) % mod_prod
+
+  return solve_mod_congruences(remainders, moduli)
 
 
 check_eq(day13_part2(s1.splitlines()[1]), 1068781)
@@ -1504,7 +1547,7 @@ def day15b(s, *, num_turns=2020):  # Faster, using List.
 
     return number
 
-  initial_sequence = np.array(tuple(map(int, s.split(','))), dtype=np.int32)
+  initial_sequence = np.array(tuple(map(int, s.split(','))), np.int32)
   return func(initial_sequence, num_turns)
 
 
@@ -1522,7 +1565,7 @@ def day15(s, *, num_turns=2020):  # Faster, using np.array and numba.
 
   @numba_njit(cache=True)
   def func(initial_sequence, num_turns):
-    last_turn = np.full(num_turns, -1, dtype=np.int32)
+    last_turn = np.full(num_turns, -1, np.int32)
     for turn in range(min(num_turns, len(initial_sequence))):
       number = initial_sequence[turn]
       prev_turn = last_turn[number]
@@ -1535,7 +1578,7 @@ def day15(s, *, num_turns=2020):  # Faster, using np.array and numba.
 
     return number
 
-  initial_sequence = np.array(tuple(map(int, s.split(','))), dtype=np.int32)
+  initial_sequence = np.array(tuple(map(int, s.split(','))), np.int32)
   return func(initial_sequence, num_turns)
 
 
@@ -1643,7 +1686,7 @@ def day16(s, *, part2=False):
     return all(any(range[0] <= ticket[field_index] <= range[1] for range in ranges)
                for ticket in valid_tickets)
 
-  grid = np.empty((num_rules, num_fields), dtype=bool)
+  grid = np.empty((num_rules, num_fields), bool)
   # Computational bottleneck; could let rules.values() be array and use numba.
   for rule_index, rule in enumerate(rules):
     for field_index in range(num_fields):
@@ -2184,7 +2227,7 @@ def day20(s, *, part2=False, visualize=False):
   rotation, _ = (rotation for rotation in rotations  # 2 solutions due to flip
                  if (len(edge_list[tuple(rotate(tile, rotation)[0])]) == 1 and
                      len(edge_list[tuple(rotate(tile, rotation)[:, 0])]) == 1))
-  layout = np.empty((n, n), dtype=object)
+  layout = np.empty((n, n), object)
   layout[0, 0] = index, rotation
 
   def find(not_index, rot, desired):
@@ -2246,7 +2289,7 @@ def day20(s, *, part2=False, visualize=False):
 
   if visualize:
     value_from_ch = {'.': 0.0, '#': -1.0, 'O': 1.0}
-    lookup = np.zeros(256, dtype=np.float32)
+    lookup = np.zeros(256, np.float32)
     for ch, value in value_from_ch.items():
       lookup[ord(ch)] = value
     grid2 = lookup[grid.view(np.uint32).astype(np.uint8)]
@@ -2525,7 +2568,7 @@ check_eq(day23b(s1), '67384529')
 def day23(s, *, max_num=0, num_moves=100):
   dtype = np.int32 if 'numba' in globals() else np.int64
   l = np.array(list(map(int, s.strip())), dtype)
-  next_cup = np.empty(1 + max(len(l), max_num), dtype=l.dtype)
+  next_cup = np.empty(1 + max(len(l), max_num), l.dtype)
 
   @numba_njit(cache=True)  # 0.25 s to jit on first invocation
   def func(l, max_num, num_moves, next_cup):
@@ -2731,7 +2774,7 @@ def day25(s, *, base=7, mod=20201227):  # Fast.
   def log_mod(base: int, value: int, mod: int) -> int | None:
     """Returns exponent for 'base**exponent % mod == value'."""
     # Using https://en.wikipedia.org/wiki/Baby-step_giant-step
-    # m = int(math.ceil(math.sqrt(mod)))
+    # m = int(math.ceil(mod**0.5))
     m = math.isqrt(mod - 1) + 1
     table = {}
     e = 1
