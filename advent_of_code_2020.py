@@ -60,7 +60,9 @@ import itertools
 import math
 import operator
 import re
+import sys
 import textwrap
+import types
 from typing import Any
 
 import advent_of_code_hhoppe  # https://github.com/hhoppe/advent-of-code-hhoppe/blob/main/advent_of_code_hhoppe/__init__.py
@@ -101,10 +103,11 @@ if 0:
 # %%
 try:
   import numba
-  numba_njit = numba.njit
 except ModuleNotFoundError:
   print('Package numba is unavailable.')
-  numba_njit = hh.noop_decorator
+  numba = sys.modules['numba'] = types.ModuleType('numba')
+  numba.njit = hh.noop_decorator
+using_numba = hasattr(numba, 'jit')
 
 # %%
 advent = advent_of_code_hhoppe.Advent(year=YEAR, input_url=INPUT_URL, answer_url=ANSWER_URL)
@@ -1105,46 +1108,49 @@ check_eq(day11a(s1), 37)
 day11a_part2 = functools.partial(day11a, part2=True)
 check_eq(day11a_part2(s1), 26)
 
-if 'numba' not in globals():  # Best non-numba solutions.
+if not using_numba:  # Best non-numba solutions.
   puzzle.verify(1, day11a)  # ~2500 ms.
   puzzle.verify(2, day11a_part2)  # ~5800 ms.
 
 
 # %%
 # More naive solution, but faster when using numba.
+
+@numba.njit(parallel=True)
+def day11_evolve(grid, neighbors, part2):
+  shape = grid.shape
+  EMPTY, FREE, OCCUPIED = 0, 1, 2
+
+  def count_occupied_neighbors(grid, y0, x0, only_adjacent):
+    count = 0
+    for dy, dx in neighbors:
+      y, x = y0 + dy, x0 + dx
+      while 0 <= y < shape[0] and 0 <= x < shape[1]:
+        if grid[y, x] != EMPTY or only_adjacent:
+          count += grid[y, x] == OCCUPIED
+          break
+        y, x = y + dy, x + dx
+    return count
+
+  prev = grid.copy()
+  for y in range(shape[0]):
+    for x in range(shape[1]):
+      num_occupied = count_occupied_neighbors(prev, y, x, not part2)
+      if prev[y, x] == FREE and num_occupied == 0:
+        grid[y, x] = OCCUPIED
+      elif prev[y, x] == OCCUPIED and num_occupied >= (5 if part2 else 4):
+        grid[y, x] = FREE
+  return not np.all(grid == prev)
+
+
 def day11(s, *, part2=False, return_video=False):
   int_from_ch = {'.': 0, 'L': 1, '#': 2}
   grid = grid_from_string(s, int_from_ch)
   neighbors = tuple(set(itertools.product((-1, 0, 1), repeat=2)) - {(0, 0)})
-  EMPTY, FREE, OCCUPIED = 0, 1, 2
-
-  @numba_njit(cache=True, parallel=True)
-  def evolve(grid, neighbors, part2):
-    shape = grid.shape
-
-    def count_occupied_neighbors(grid, y0, x0, only_adjacent):
-      count = 0
-      for dy, dx in neighbors:
-        y, x = y0 + dy, x0 + dx
-        while 0 <= y < shape[0] and 0 <= x < shape[1]:
-          if grid[y, x] != EMPTY or only_adjacent:
-            count += grid[y, x] == OCCUPIED
-            break
-          y, x = y + dy, x + dx
-      return count
-
-    prev = grid.copy()
-    for y in range(shape[0]):
-      for x in range(shape[1]):
-        num_occupied = count_occupied_neighbors(prev, y, x, not part2)
-        if prev[y, x] == FREE and num_occupied == 0:
-          grid[y, x] = OCCUPIED
-        elif prev[y, x] == OCCUPIED and num_occupied >= (5 if part2 else 4):
-          grid[y, x] = FREE
-    return not np.all(grid == prev)
+  OCCUPIED = 2
 
   images = []
-  while evolve(grid, neighbors, part2):
+  while day11_evolve(grid, neighbors, part2):
     if return_video:
       image = (grid == OCCUPIED).repeat(2, axis=0).repeat(2, axis=1)
       images.append(image)
@@ -1160,12 +1166,12 @@ check_eq(day11(s1), 37)  # ~2000 ms for numba compilation.
 day11_part2 = functools.partial(day11, part2=True)
 check_eq(day11_part2(s1), 26)
 
-if 'numba' in globals():
+if using_numba:
   puzzle.verify(1, day11)  # ~32 ms with numba; ~24 s without numba.
   puzzle.verify(2, day11_part2)  # ~49 ms with numba; ~27 s without numba.
 
 # %%
-if 'numba' in globals():
+if using_numba:
   videos = {
       'Part 1': day11(puzzle.input, return_video=True),
       'Part 2': day11_part2(puzzle.input, return_video=True),
@@ -1551,38 +1557,40 @@ def day15b(s, *, num_turns=2020):  # Faster, using List.
 check_eq(day15b(s1), 436)
 puzzle.verify(1, day15b)  # ~1 ms.
 
-if 'numba' not in globals():
+if not using_numba:
   day15b_part2 = functools.partial(day15b, num_turns=30_000_000)
   # check_eq(day15b_part2(s1), 175594)  # Slow; ~9 s.
   puzzle.verify(2, day15b_part2)  # Slow; ~10 s.
 
 
 # %%
-def day15(s, *, num_turns=2020):  # Faster, using np.array and numba.
+# Faster, using np.array and numba.
 
-  @numba_njit(cache=True)
-  def func(initial_sequence, num_turns):
-    last_turn = np.full(num_turns, -1, np.int32)
-    for turn in range(min(num_turns, len(initial_sequence))):
-      number = initial_sequence[turn]
-      prev_turn = last_turn[number]
-      last_turn[number] = turn
+@numba.njit
+def day15_func(initial_sequence, num_turns):
+  last_turn = np.full(num_turns, -1, np.int32)
+  for turn in range(min(num_turns, len(initial_sequence))):
+    number = initial_sequence[turn]
+    prev_turn = last_turn[number]
+    last_turn[number] = turn
 
-    for turn in range(len(initial_sequence), num_turns):
-      number = 0 if prev_turn < 0 else turn - 1 - prev_turn
-      prev_turn = last_turn[number]
-      last_turn[number] = turn
+  for turn in range(len(initial_sequence), num_turns):
+    number = 0 if prev_turn < 0 else turn - 1 - prev_turn
+    prev_turn = last_turn[number]
+    last_turn[number] = turn
 
-    return number
+  return number
 
+
+def day15(s, *, num_turns=2020):
   initial_sequence = np.array(tuple(map(int, s.split(','))), np.int32)
-  return func(initial_sequence, num_turns)
+  return day15_func(initial_sequence, num_turns)
 
 
 check_eq(day15(s1), 436)  # ~1 s for numba compilation.
 puzzle.verify(1, day15)  # ~4 ms.
 
-if 'numba' in globals():
+if using_numba:
   day15_part2 = functools.partial(day15, num_turns=30_000_000)
   check_eq(day15_part2(s1), 175594)  # ~1 s for numba compilation.
   if 0:
@@ -2562,38 +2570,39 @@ check_eq(day23b(s1), '67384529')
 
 # %%
 # Code keeping track of next cup label for each cup label:
+
+@numba.njit  # 0.25 s to jit on first invocation
+def day23_func(l, max_num, num_moves, next_cup):
+  n = len(next_cup) - 1
+  current = l[0]
+  for i in range(len(l) - 1):
+    next_cup[l[i]] = l[i + 1]
+  if max_num:
+    next_cup[l[-1]] = len(l) + 1
+    for i in range(len(l) + 1, max_num):
+      next_cup[i] = i + 1
+    next_cup[max_num] = l[0]
+  else:
+    next_cup[l[-1]] = l[0]
+
+  for _ in range(num_moves):
+    extracted1 = next_cup[current]
+    extracted2 = next_cup[extracted1]
+    extracted3 = next_cup[extracted2]
+    destination = current - 1 if current > 1 else n
+    while destination in (extracted1, extracted2, extracted3):
+      destination = destination - 1 if destination > 1 else n
+    next_cup[current] = next_cup[extracted3]
+    next_cup[extracted3] = next_cup[destination]
+    next_cup[destination] = extracted1
+    current = next_cup[current]
+
+
 def day23(s, *, max_num=0, num_moves=100):
-  dtype = np.int32 if 'numba' in globals() else np.int64
+  dtype = np.int32 if using_numba else np.int64
   l = np.array(list(map(int, s.strip())), dtype)
   next_cup = np.empty(1 + max(len(l), max_num), l.dtype)
-
-  @numba_njit(cache=True)  # 0.25 s to jit on first invocation
-  def func(l, max_num, num_moves, next_cup):
-    n = len(next_cup) - 1
-    current = l[0]
-    for i in range(len(l) - 1):
-      next_cup[l[i]] = l[i + 1]
-    if max_num:
-      next_cup[l[-1]] = len(l) + 1
-      for i in range(len(l) + 1, max_num):
-        next_cup[i] = i + 1
-      next_cup[max_num] = l[0]
-    else:
-      next_cup[l[-1]] = l[0]
-
-    for _ in range(num_moves):
-      extracted1 = next_cup[current]
-      extracted2 = next_cup[extracted1]
-      extracted3 = next_cup[extracted2]
-      destination = current - 1 if current > 1 else n
-      while destination in (extracted1, extracted2, extracted3):
-        destination = destination - 1 if destination > 1 else n
-      next_cup[current] = next_cup[extracted3]
-      next_cup[extracted3] = next_cup[destination]
-      next_cup[destination] = extracted1
-      current = next_cup[current]
-
-  func(l, max_num, num_moves, next_cup)
+  day23_func(l, max_num, num_moves, next_cup)
   if max_num:
     cup1 = next_cup[1]
     cup2 = next_cup[cup1]
@@ -2609,7 +2618,7 @@ check_eq(day23(s1), '67384529')
 puzzle.verify(1, day23)  # ~6 ms with numba; ~1 ms without numba.
 
 day23_part2 = functools.partial(day23, num_moves=10_000_000, max_num=1_000_000)
-if 'numba' in globals():
+if using_numba:
   check_eq(day23_part2(s1), 149245887792)
 puzzle.verify(2, day23_part2)  # ~400 ms with numba; ~25 s without numba.
 
