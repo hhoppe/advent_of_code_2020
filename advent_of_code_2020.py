@@ -522,7 +522,7 @@ puzzle.verify(2, day5b_part2)  # ~9 ms.
 def day5c_part2(s):  # Fast, using numpy successive differences of sorted indices.
   seat_ids = np.sort([day5_seat_id(line) for line in s.split()])
   diff = np.diff(seat_ids)
-  i, = np.nonzero(diff == 2)[0]
+  (i,), = np.nonzero(diff == 2)
   seat_id = seat_ids[i] + 1
   return seat_id
 
@@ -540,7 +540,8 @@ def day5_part2(s):  # Also fast, using numpy subsequence search.
   seat_ids = [day5_seat_id(line) for line in s.split()]
   occupied = np.full(128 * 8, False)
   occupied[seat_ids] = True
-  seat_id, = matching_subsequences(occupied, (1, 0, 1)).nonzero()[0] + 1
+  (i,), = matching_subsequences(occupied, (1, 0, 1)).nonzero()
+  seat_id = i + 1
   return seat_id
 
 puzzle.verify(2, day5_part2)  # ~2 ms.
@@ -1697,12 +1698,13 @@ def day16(s, *, part2=False):
     for field_index in range(num_fields):
       grid[rule_index, field_index] = is_compatible(rule, field_index)
 
+  list_rules = list(rules)
   column_of_rule = {}
   row_sums = grid.sum(axis=1)
   while row_sums.any():
     row = np.nonzero(row_sums == 1)[0][0]
-    col = np.nonzero(grid[row] == 1)[0][0]
-    rule = list(rules)[row]
+    (col,), = np.nonzero(grid[row] == 1)
+    rule = list_rules[row]
     column_of_rule[rule] = col
     row_sums -= grid[:, col]
     grid[:, col] = 0
@@ -2288,7 +2290,7 @@ def day20(s, *, part2=False, visualize=False):
       pattern_view = rotate(pattern_uint8, rotation)
       pattern_indices = pattern_view.nonzero()
       corr = scipy.signal.correlate2d(grid_uint8, pattern_view, mode='valid')
-      locations = np.moveaxis(np.array(np.nonzero(corr == pattern_view.sum())), 0, -1)
+      locations = zip(*np.nonzero(corr == pattern_view.sum()))
       for y, x in locations:
         grid[y:, x:][pattern_indices] = 'O'
 
@@ -2310,10 +2312,12 @@ puzzle.verify(1, day20)  # ~12 ms.
 day20_part2 = functools.partial(day20, part2=True)
 check_eq(day20_part2(s1), 273)
 puzzle.verify(2, day20_part2)  # ~31 ms.
+
+# %%
 _ = day20_part2(puzzle.input, visualize=True)
 
 # %%
-# # # %prun [day20_part2(puzzle.input) for _ in range(10)]
+# hh.prun(lambda: [day20_part2(puzzle.input) for _ in range(10)])
 
 # %% [markdown]
 # <a name="day21"></a>
@@ -2367,7 +2371,7 @@ def day21(s, *, part2=False):
     del possibles_for_allergen[allergen]
 
   if not part2:
-    allergen_ingredients = set(list(allergen_ingredient.values()))
+    allergen_ingredients = set(allergen_ingredient.values())
     return sum(len(ingredients - allergen_ingredients) for ingredients, _ in foods())
 
   return ','.join(ingredient for _, ingredient in sorted(allergen_ingredient.items()))
