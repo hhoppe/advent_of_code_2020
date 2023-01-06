@@ -2272,7 +2272,7 @@ def day20(s, *, part2=False, visualize=False):
           subgrid_view[pattern_indices] = 'O'
 
   elif 0:  # faster, using 1-d matching
-    grid_view_1d = grid.reshape(-1)
+    grid_view_1d = grid.ravel()
     for rotation in rotations:
       pattern_view = rotate(pattern, rotation)
       pattern_indices = pattern_view.nonzero()
