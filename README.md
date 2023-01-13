@@ -1,6 +1,8 @@
 <a name="top"></a>
 # Advent of code 2020
 
+## **Content is now moved into https://github.com/hhoppe/advent_of_code/**
+
 [[**Open the notebook in Colab**]](https://colab.research.google.com/github/hhoppe/advent_of_code_2020/blob/main/advent_of_code_2020.ipynb)
 
 IPython/Jupyter [notebook](https://github.com/hhoppe/advent_of_code_2020/blob/main/advent_of_code_2020.ipynb) by [Hugues Hoppe](http://hhoppe.com/); December 2020.
